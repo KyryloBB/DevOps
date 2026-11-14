@@ -1,20 +1,27 @@
 "use strict";
 
 const fastify = require("fastify");
-const fs = require("fs");
-const path = require("path");
+const healthRoutes = require("./routes/health");
+const tasksRoutes = require("./routes/tasks");
+const rootRoutes = require("./routes/root");
 
-const configPath = path.resolve(__dirname, "config.json");
-const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+function buildApp() {
+  const app = fastify();
 
-function buildApp () {
-  const app = fastify({ logger: true });
-
-  app.get("/ping", async () => {
-    return { status: "ok" };
+  app.addContentTypeParser("application/json", { parseAs: "string" }, function (req, body, done) {
+    try {
+      done(null, JSON.parse(body));
+    } catch (err) {
+      err.statusCode = 400;
+      done(err);
+    }
   });
 
-  return app
+  app.register(rootRoutes);
+  app.register(healthRoutes);
+  app.register(tasksRoutes);
+
+  return app;
 }
 
 module.exports = buildApp;
