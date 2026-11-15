@@ -18,44 +18,32 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-function taskToHtmlRow(task) {
-  return `<tr>
-            <td>${escapeHtml(task.id)}</td>
-            <td>${escapeHtml(task.title)}</td>
-            <td>${escapeHtml(task.status)}</td>
-            <td>${escapeHtml(task.created_at)}</td>
-          </tr>`;
-}
-
-function taskToHtml(task) {
-  return `<!DOCTYPE html>
-  <html>
-    <head><meta charset="utf-8"><title>Task</title></head>
-    <body>
-      <h1>Task</h1>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>id</th>
-            <th>title</th>
-            <th>status</th>
-            <th>created_at</th>
-          </tr>
-        </thead>
-        <tbody>${taskToHtmlRow(task)}</tbody>
-      </table>
-    </body>
-  </html>`;
-}
-
 function tasksListHtml(rows) {
-  const rowsHtml = rows.map(taskToHtmlRow).join("\n");
+  const rowsHtml = rows.map(task => {
+    const doneButton = task.status === "done"
+      ? "<button disabled>Done</button>"
+      : `<form action="/tasks/${escapeHtml(task.id)}/done" method="POST" style="display:inline;"><button type="submit">Done</button></form>`;
+    return `<tr>
+              <td>${escapeHtml(task.id)}</td>
+              <td>${escapeHtml(task.title)}</td>
+              <td>${escapeHtml(task.status)}</td>
+              <td>${escapeHtml(task.created_at)}</td>
+              <td>${doneButton}</td>
+            </tr>`;
+  }).join("\n");
   return `<!DOCTYPE html>
   <html>
     <head> 
       <meta charset="utf-8"><title>Tasks</title></head>
     <body>
       <h1>Tasks</h1>
+
+      <form action="/tasks" method="POST">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+        <button type="submit">Create Task</button>
+      </form>
+
       <table border="1">
         <thead>
           <tr>
@@ -63,6 +51,7 @@ function tasksListHtml(rows) {
             <th>title</th>
             <th>status</th>
             <th>created_at</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
@@ -98,7 +87,7 @@ async function tasksRoutes(fastify) {
 
     const task = rows[0];
     if (getAcceptType(request) === "html") {
-      reply.code(201).type("text/html").send(taskToHtml(task));
+      reply.redirect("/tasks");
     } else {
       reply.code(201).type("application/json").send(task);
     }
@@ -118,7 +107,7 @@ async function tasksRoutes(fastify) {
 
     const task = rows[0];
     if (getAcceptType(request) === "html") {
-      reply.type("text/html").send(taskToHtml(task));
+      reply.redirect("/tasks");
     } else {
       reply.type("application/json").send(task);
     }

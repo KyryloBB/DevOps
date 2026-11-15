@@ -17,6 +17,20 @@ function buildApp() {
     }
   });
 
+  app.addContentTypeParser("application/x-www-form-urlencoded", { parseAs: "string" }, function (req, body, done) {
+    try {
+      const params = new URLSearchParams(body);
+      const obj = {};
+      for (const [key, value] of params) {
+        obj[key] = value;
+      }
+      done(null, obj);
+    } catch (err) {
+      err.statusCode = 400;
+      done(err);
+    }
+  });
+
   app.register(rootRoutes);
   app.register(healthRoutes);
   app.register(tasksRoutes);
