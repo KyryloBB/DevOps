@@ -21,8 +21,8 @@ function escapeHtml(unsafe) {
 function tasksListHtml(rows) {
   const rowsHtml = rows.map(task => {
     const doneButton = task.status === "done"
-      ? "<button disabled>Done</button>"
-      : `<form action="/tasks/${escapeHtml(task.id)}/done" method="POST" style="display:inline;"><button type="submit">Done</button></form>`;
+      ? "<button disabled>Виконане</button>"
+      : `<form action="/tasks/${escapeHtml(task.id)}/done" method="POST" style="display:inline;"><button type="submit">Виконане</button></form>`;
     return `<tr>
               <td>${escapeHtml(task.id)}</td>
               <td>${escapeHtml(task.title)}</td>
@@ -36,22 +36,22 @@ function tasksListHtml(rows) {
     <head> 
       <meta charset="utf-8"><title>Tasks</title></head>
     <body>
-      <h1>Tasks</h1>
+      <h1>Завдання</h1>
 
       <form action="/tasks" method="POST">
-        <label for="title">Title:</label>
+        <label for="title">Назва:</label>
         <input type="text" id="title" name="title" required>
-        <button type="submit">Create Task</button>
+        <button type="submit">Створити завдання</button>
       </form>
 
       <table border="1">
         <thead>
           <tr>
             <th>id</th>
-            <th>title</th>
-            <th>status</th>
-            <th>created_at</th>
-            <th>Action</th>
+            <th>Назва</th>
+            <th>Статус</th>
+            <th>Час створення</th>
+            <th>Позначити як виконане</th>
           </tr>
         </thead>
         <tbody>${rowsHtml}</tbody>
