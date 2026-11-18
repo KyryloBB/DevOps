@@ -10,7 +10,7 @@ async function run() {
         id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'pending',
-        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
 
