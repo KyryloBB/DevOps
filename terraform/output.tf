@@ -1,11 +1,9 @@
 output "worker_ip" {
-  description = "Host-Only IP address"
-  value       = "192.168.57.47"
+  value = libvirt_domain.worker.network_interface[0].addresses[0]
 }
 
 output "db_ip" {
-  description = "Host-Only IP address"
-  value       = "192.168.57.48"
+  value = libvirt_domain.db.network_interface[0].addresses[0]
 }
 
 output "ssh_command" {

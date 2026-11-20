@@ -25,26 +25,18 @@ users:
     lock_passwd: false
     plain_text_passwd: '12345678'
     sudo:
-      - 'ALL=(ALL) NOPASSWD: /usr/bin/systemctl start mywebapp.service, /usr/bin/systemctl stop mywebapp.service, /usr/bin/systemctl restart mywebapp.service, /usr/bin/systemctl status mywebapp.service, /usr/bin/systemctl reload nginx'
+      - 'ALL=(ALL) NOPASSWD: /usr/bin/systemctl start webapp.service'
+      - 'ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop webapp.service' 
+      - 'ALL=(ALL) NOPASSWD:/usr/bin/systemctl restart webapp.service' 
+      - 'ALL=(ALL) NOPASSWD:/usr/bin/systemctl status webapp.service' 
+      - 'ALL=(ALL) NOPASSWD:/usr/bin/systemctl reload nginx'
 
 chpasswd:
   expire: false
 
+package_update: true
 packages:
   - python3
-
-# Конфігурація мережі
-write_files:
-  - path: /etc/netplan/60-hostonly.yaml
-    permissions: '0600'
-    content: |
-      network:
-        version: 2
-        ethernets:
-          enp0s8:
-            dhcp4: false
-            addresses:
-              - ${worker_ip}/24
-
-runcmd:
-  - netplan apply
+  - python3-apt
+  - curl
+  - ca-certificates
