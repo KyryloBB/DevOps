@@ -1,0 +1,6 @@
+app_port: 5200
+db_name: webapp_db
+db_user: app
+db_password: "12345678"
+teacher_password: "12345678"
+gradebook_value: 1

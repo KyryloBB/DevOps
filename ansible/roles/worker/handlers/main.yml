@@ -1,0 +1,11 @@
+---
+- name: Reload Nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+
+- name: Restart Webapp
+  ansible.builtin.systemd:
+    name: webapp
+    state: restarted
+    daemon_reload: yes

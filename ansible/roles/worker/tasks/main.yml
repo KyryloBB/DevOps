@@ -1,0 +1,124 @@
+---
+- name: Встановлення Nginx та залежностей
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - nodejs
+      - npm
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Створення системного користувача app
+  ansible.builtin.user:
+    name: app
+    system: yes
+    shell: /usr/sbin/nologin
+    create_home: yes
+
+- name: Створення користувача operator
+  ansible.builtin.user:
+    name: operator
+    password: "{{ teacher_password | password_hash('sha512') }}"
+    shell: /bin/bash
+    lock_passwd: no
+
+- name: Налаштування sudo прав для operator
+  ansible.builtin.copy:
+    content: |
+      operator ALL=(ALL) NOPASSWD: /usr/bin/systemctl start webapp.service, /usr/bin/systemctl stop webapp.service, /usr/bin/systemctl restart webapp.service, /usr/bin/systemctl status webapp.service, /usr/bin/systemctl reload nginx
+    dest: /etc/sudoers.d/operator
+    mode: '0440'
+    validate: /usr/sbin/visudo -csf %s
+
+- name: Створення директорії застосунку
+  ansible.builtin.file:
+    path: /home/app/webapp
+    state: directory
+    owner: app
+    group: app
+    mode: '0755'
+
+- name: Копіювання файлів застосунку на сервер
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /home/app/webapp/
+    owner: app
+    group: app
+    mode: '0644'
+  loop:
+    - ../../../../server.js
+    - ../../../../app.js
+    - ../../../../package.json
+    - ../../../../package-lock.json
+
+- name: Копіювання директорії routes
+  ansible.builtin.copy:
+    src: ../../../../routes/
+    dest: /home/app/webapp/
+    owner: app
+    group: app
+    mode: '0755'
+
+- name: Копіювання директорії db
+  ansible.builtin.copy:
+    src: ../../../../db/
+    dest: /home/app/webapp/
+    owner: app
+    group: app
+    mode: '0755'
+
+- name: Розгортання config.json з шаблону
+  ansible.builtin.template:
+    src: config.json.j2
+    dest: /home/app/webapp/config.json
+    owner: app
+    group: app
+    mode: '0644'
+
+- name: Встановлення залежностей Node.js
+  ansible.builtin.command: npm install
+  args:
+    chdir: /home/app/webapp
+    creates: /home/app/webapp/node_modules
+  become: yes
+  become_user: app
+
+- name: Запуск міграцій бази даних
+  ansible.builtin.command: npm run migrate
+  args:
+    chdir: /home/app/webapp
+  become: yes
+  become_user: app
+
+- name: Розгортання конфігурації Nginx з шаблону
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/sites-available/webapp
+  notify: Reload Nginx
+
+- name: Активація сайту Nginx (симлінк)
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/webapp
+    dest: /etc/nginx/sites-enabled/webapp
+    state: link
+  notify: Reload Nginx
+
+- name: Видалення дефолтного сайту Nginx
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Reload Nginx
+
+- name: Розгортання systemd-unit застосунку з шаблону
+  ansible.builtin.template:
+    src: webapp.service.j2
+    dest: /etc/systemd/system/webapp.service
+  notify: Restart Webapp
+
+- name: Запуск та увімкнення сервісу застосунку
+  ansible.builtin.systemd:
+    name: webapp
+    state: started
+    enabled: yes
+    daemon_reload: yes

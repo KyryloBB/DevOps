@@ -1,0 +1,22 @@
+---
+- name: Перевірка чи Nginx запущений
+  ansible.builtin.service:
+    name: nginx
+    state: started
+
+- name: Перевірка чи webapp сервіс активний
+  ansible.builtin.service:
+    name: webapp
+    state: started
+
+- name: Перевірка ендпоінта /health/alive
+  ansible.builtin.uri:
+    url: http://localhost/health/alive
+    method: GET
+    status_code: 200
+
+- name: Перевірка ендпоінта /health/ready
+  ansible.builtin.uri:
+    url: http://localhost/health/ready
+    method: GET
+    status_code: 200
