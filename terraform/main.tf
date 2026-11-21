@@ -32,20 +32,11 @@ resource "libvirt_volume" "db_disk" {
   size           = 10737418240 # 10 ГБ
 }
 
-# Передача cloud-init-worker
-resource "libvirt_cloudinit_disk" "worker_init" {
-  name = "worker-init.iso"
+# Передача cloud-init
+resource "libvirt_cloudinit_disk" "common_init" {
+  name = "common-init.iso"
   pool = "default"
-  user_data = templatefile("${path.module}/cloud-init-worker.yml", {
-    ansible_ssh_key = file(pathexpand(var.ansible_ssh_key_path))
-  })
-}
-
-# Передача cloud-init-db
-resource "libvirt_cloudinit_disk" "db_init" {
-  name = "db-init.iso"
-  pool = "default"
-  user_data = templatefile("${path.module}/cloud-init-db.yml", {
+  user_data = templatefile("${path.module}/cloud-init.yml", {
     ansible_ssh_key = file(pathexpand(var.ansible_ssh_key_path))
   })
 }
@@ -55,7 +46,7 @@ resource "libvirt_domain" "worker" {
   memory = var.vm_memory
   vcpu   = var.vm_cpus
 
-  cloudinit = libvirt_cloudinit_disk.worker_init.id
+  cloudinit = libvirt_cloudinit_disk.common_init.id
 
   disk {
     volume_id = libvirt_volume.worker_disk.id
@@ -78,7 +69,7 @@ resource "libvirt_domain" "db" {
   memory = var.vm_memory
   vcpu   = var.vm_cpus
 
-  cloudinit = libvirt_cloudinit_disk.db_init.id
+  cloudinit = libvirt_cloudinit_disk.common_init.id
 
   disk {
     volume_id = libvirt_volume.db_disk.id

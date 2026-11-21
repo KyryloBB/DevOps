@@ -9,12 +9,6 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh_authorized_keys:
       - ${ansible_ssh_key}
-
-  - name: teacher
-    groups: [sudo]
-    shell: /bin/bash
-    lock_passwd: false
-    plain_text_passwd: '12345678'
   
 chpasswd:
   expire: false
@@ -24,4 +18,3 @@ packages:
   - python3
   - python3-apt
   - curl
-  - ca-certificates
