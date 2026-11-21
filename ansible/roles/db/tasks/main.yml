@@ -1,0 +1,43 @@
+---
+- name: Встановлення PostgreSQL та залежностей
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Переконатися, що PostgreSQL запущено
+  ansible.builtin.systemd:
+    name: postgresql
+    state: started
+    enabled: yes
+
+- name: Створення БД користувача app із паролем
+  community.postgresql.postgresql_user:
+    name: "{{ db_user }}"
+    password: "{{ db_password }}"
+    state: present
+  become_user: postgres
+
+- name: Створення бази даних webapp_db та призначення власника
+  community.postgresql.postgresql_db:
+    name: "{{ db_name }}"
+    owner: "{{ db_user }}"
+    state: present
+  become_user: postgres
+
+- name: Налаштування прослуховування PostgreSQL на IP віртуальної машини
+  ansible.builtin.lineinfile:
+    path: /etc/postgresql/16/main/postgresql.conf
+    regexp: '^#?listen_addresses'
+    line: "listen_addresses = '{{ ansible_host }}'"
+  notify: Restart PostgreSQL
+
+- name: Дозвіл підключення до БД тільки з Worker вузла
+  ansible.builtin.template:
+    src: pg_hba.conf.j2
+    dest: /etc/postgresql/16/main/pg_hba.conf
+  notify: Restart PostgreSQL

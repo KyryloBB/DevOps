@@ -1,5 +1,5 @@
 variable "vm_image_url" {
-  description = "Ubuntu 22.04 qcow2"
+  description = "Ubuntu 24.04 qcow2"
   type        = string
   default     = "https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img"
 }

@@ -1,0 +1,21 @@
+---
+- name: Створення користувача teacher
+  ansible.builtin.user:
+    name: teacher
+    password: "{{ teacher_password | password_hash('sha512') }}"
+    groups: sudo
+    append: yes
+    shell: /bin/bash
+    lock_passwd: no
+
+- name: Створення директорії для gradebook
+  ansible.builtin.file:
+    path: /home/student
+    state: directory
+    mode: '0755'
+
+- name: Створення файлу gradebook
+  ansible.builtin.copy:
+    content: "{{ gradebook_value }}\n"
+    dest: /home/student/gradebook
+    mode: '0644'
